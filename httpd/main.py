@@ -1,6 +1,7 @@
 import os
 import signal
 import socket
+import select
 import errno
 import re
 
@@ -24,16 +25,9 @@ def handle_request(req):
     return sf(req, rx.match(req['path']))
 
 
-def stop(trigger):
+def stop(trigger, sock):
     trigger.wait()
-    hub = greennet.get_hub()
-    hub.tasks.clear()
-    for wait in hub.fdwaits:
-        try:
-            os.close(wait.fd)
-        except Exception:
-            pass
-    hub.fdwaits.clear()
+    sock.close()
 
 
 def signal_handler(trigger):
@@ -48,11 +42,11 @@ def main():
     import signal
     handler = signal_handler(trigger)
     signal.signal(signal.SIGINT, handler)
-    greennet.schedule(greenlet(stop), trigger)
+    greennet.schedule(greenlet(stop), trigger, sock)
     greennet.switch()
     try:
         accept_connections(sock, handle_request)
-    except socket.error, err:
+    except (socket.error, select.error), err:
         if err.args[0] != errno.EBADF:
             raise
 
