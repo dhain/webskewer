@@ -10,6 +10,11 @@ from greennet import greenlet
 from greennet.trigger import Trigger
 
 
+__author__ = 'David Hain'
+__copyright__ = '2007-2008 ' + __author__
+__license__ = 'MIT'
+
+
 from httpd.serve import accept_connections, listen
 from httpd.static_files import static_files
 sf = static_files('.')
