@@ -46,6 +46,9 @@ class static_files(object):
         self.listing = listing
     
     def send_file(self, req, fn):
+        gzfn = fn + '.gz'
+        if not fn.endswith('.gz') and os.path.isfile(gzfn):
+            fn = gzfn
         st = os.stat(fn)
         mt = time_util.timestamp_to_dt(st.st_mtime, time_util.localtime)
         if not time_util.check_if_modified_since(req, mt):
@@ -126,6 +129,6 @@ class static_files(object):
                         return normurl(req, True) or self.send_file(req, nfn)
                 if self.listing:
                     return normurl(req, True) or self.list_dir(req, fn)
-            elif os.path.exists(fn):
+            elif os.path.isfile(fn):
                 return normurl(req, False) or self.send_file(req, fn)
         return message.NotFound(req)

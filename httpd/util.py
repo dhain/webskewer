@@ -1,4 +1,6 @@
 import re
+from sys import modules
+from os.path import getmtime
 from urllib import unquote_plus
 from urlparse import urlunsplit
 
@@ -42,3 +44,30 @@ def decodeurl(url):
     return unquote_plus(url).decode('utf-8')
 
 __all__.append('decodeurl')
+
+
+def reloading(f):
+    """Decorator that reloads containing module of decorated function."""
+    m = modules[f.__module__]
+    fn = m.__file__
+    if fn.endswith('.pyc'):
+        fn = fn[:-1]
+    m.__mtime__ = getmtime(fn)
+    f = [f, f.__name__]
+    
+    def wrapped(*args, **kw):
+        mt = getmtime(fn)
+        if mt > m.__mtime__:
+            reload(m)
+            m.__mtime__ = mt
+            f[0] = getattr(m, f[1])
+            wrapped.__doc__ = f[0].__doc__
+        return f[0](*args, **kw)
+    
+    wrapped.__name__ = f[1]
+    wrapped.__doc__ = f.__doc__
+    return wrapped
+
+__all__.append('reloading')
+
+
