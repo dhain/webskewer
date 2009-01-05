@@ -24,19 +24,23 @@ def send_responses(sock, response_queue):
         req, resp = response_queue.popleft()
         if resp is None:
             break
-        if req['version'] > (0,9):
-            preamble = ('HTTP/%d.%d ' % resp['version'] +
-                        '%d %s\r\n' % resp['status'] +
-                        format_headers(resp['headers']) +
-                        format_headers(resp['entity']['headers']) +
-                        '\r\n')
-            greennet.sendall(sock, preamble)
-        if req['method'] != 'HEAD' and 'body' in resp['entity']:
-            if isinstance(resp['entity']['body'], basestring):
-                greennet.sendall(sock, resp['entity']['body'])
-            else:
-                for data in resp['entity']['body']:
-                    greennet.sendall(sock, data)
+        try:
+            if req['version'] > (0,9):
+                preamble = ('HTTP/%d.%d ' % resp['version'] +
+                            '%d %s\r\n' % resp['status'] +
+                            format_headers(resp['headers']) +
+                            format_headers(resp['entity']['headers']) +
+                            '\r\n')
+                greennet.sendall(sock, preamble)
+            if req['method'] != 'HEAD' and 'body' in resp['entity']:
+                if isinstance(resp['entity']['body'], basestring):
+                    greennet.sendall(sock, resp['entity']['body'])
+                else:
+                    for data in resp['entity']['body']:
+                        greennet.sendall(sock, data)
+        except Exception:
+            response_queue.clear()
+            break
 
 
 def handle_connection(sock, handler):
@@ -65,6 +69,8 @@ def handle_connection(sock, handler):
                 if connection == 'close':
                     break
         except greennet.ConnectionLost:
+            pass
+        except Exception:
             pass
         response_queue.append((None, None))
         response_queue.wait_until_empty()
