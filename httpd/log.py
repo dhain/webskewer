@@ -6,8 +6,7 @@ __copyright__ = '2007-2008 ' + __author__
 __license__ = 'MIT'
 
 
-def log_req(env, headers_sent, clen=None):
-    status, headers = headers_sent
+def log_req(env, status, headers, clen=None):
     if clen is None:
         for name, value in headers:
             if name.lower != 'content-length':
