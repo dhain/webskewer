@@ -5,82 +5,138 @@ import sys
 
 import greennet
 from greennet import greenlet
-from greennet.queue import Queue
 
-from httpd import message
-from httpd.log import log_req, log_exc
+from httpd import message, exceptions
+from httpd.log import log_req, log_exc, log_err
 from httpd.headers import format_headers
 from httpd.recv import recv_requests
 from httpd.time_util import now_1123
+from httpd.wsgi import ServerError
 
 
 __author__ = 'David Hain'
 __copyright__ = '2007-2008 ' + __author__
 __license__ = 'MIT'
+__version__ = (0,1)
 
 
-def send_responses(sock, response_queue):
-    while True:
-        req, resp = response_queue.popleft()
-        if resp is None:
-            break
-        try:
-            if req['version'] > (0,9):
-                preamble = ('HTTP/%d.%d ' % resp['version'] +
-                            '%d %s\r\n' % resp['status'] +
-                            format_headers(resp['headers']) +
-                            format_headers(resp['entity']['headers']) +
-                            '\r\n')
-                greennet.sendall(sock, preamble)
-            if req['method'] != 'HEAD' and 'body' in resp['entity']:
-                if isinstance(resp['entity']['body'], basestring):
-                    greennet.sendall(sock, resp['entity']['body'])
-                else:
-                    for data in resp['entity']['body']:
-                        greennet.sendall(sock, data)
-        except Exception:
-            response_queue.clear()
-            break
-
-
-def handle_connection(sock, handler):
-    response_queue = Queue()
-    greennet.schedule(greenlet(send_responses), sock, response_queue)
+def handle_connection(sock, app):
     remote_addr, remote_port = sock.getpeername()[:2]
+    local_addr, local_port = sock.getsockname()[:2]
     with closing(sock):
         try:
-            for req in recv_requests(sock):
-                req['remote_addr'] = remote_addr
-                req['remote_port'] = remote_port
+            for env in recv_requests(sock):
+                env.update({
+                    'REMOTE_ADDR': remote_addr,
+                    'REMOTE_PORT': remote_port,
+                    'SERVER_ADDR': local_addr,
+                    'SERVER_PORT': local_port,
+                    'SERVER_NAME': 'localhost',
+                    'SCRIPT_NAME': '',
+                    'wsgi.version': (1,0),
+                    'wsgi.url_scheme': 'http',
+                    'wsgi.errors': sys.stderr,
+                    'wsgi.multithread': False,
+                    'wsgi.multiprocess': False,
+                    'wsgi.run_once': False,
+                })
+                
+                headers_set = []
+                headers_sent = []
+                missing = set(['server', 'date', 'content-length'])
+                
+                def write(data):
+                    if not headers_set:
+                        raise AssertionError('write() before start_response()')
+                    elif not headers_sent:
+                        status, response_headers = headers_sent[:] = headers_set
+                        if env['neti.http_version'] > (0,9):
+                            out = ['HTTP/1.1 %s\r\n' % (status,)]
+                            for header in response_headers:
+                                lower = header[0].lower()
+                                if lower in missing:
+                                    missing.remove(lower)
+                                out.append('%s: %s\r\n' % header)
+                            out.append('\r\n')
+                            if 'content-length' in missing:
+                                out[1:1] = ['Transfer-Encoding: chunked\r\n']
+                            if 'date' in missing:
+                                out[1:1] = ['Date: %s\r\n' % (now_1123(),)]
+                            if 'server' in missing:
+                                out[1:1] = ['Server: neti/%d.%d\r\n' % __version__]
+                            greennet.sendall(sock, ''.join(out))
+                    if env['neti.http_version'] > (0,9) and 'content-length' in missing:
+                        greennet.sendall(sock, '%x\r\n' % (len(data),))
+                    greennet.sendall(sock, data)
+                    if env['neti.http_version'] > (0,9) and 'content-length' in missing:
+                        greennet.sendall(sock, '\r\n')
+                
+                def start_response(status, response_headers, exc_info=None):
+                    if exc_info:
+                        try:
+                            if headers_sent:
+                                # Re-raise original exception if headers sent
+                                raise exc_info[0], exc_info[1], exc_info[2]
+                        finally:
+                            exc_info = None     # avoid dangling circular ref
+                    elif headers_set:
+                        raise AssertionError("Headers already set!")
+                    headers_set[:] = [status, response_headers]
+                    return write
+                
+                resp = None
                 try:
-                    resp = handler(req)
+                    resp = app(env, start_response)
+                    for data in resp:
+                        if data:
+                            write(data)
+                    if not headers_sent:
+                        write('')
                 except Exception:
                     print >> sys.stderr, log_exc(remote_addr)
-                    resp = message.ServerError(req)
-                else:
-                    print log_req(req, resp)
-                response_queue.append((req, resp))
-                if 'body' in req['entity']:
-                    for _ in req['entity']['body']:
-                        pass
-                if req['version'] < (1,1):
+                    if headers_sent:
+                        break
+                    for data in ServerError(env, start_response):
+                        write(data)
+                finally:
+                    if hasattr(resp, 'close'):
+                        resp.close()
+                
+                if env['neti.http_version'] > (0,9) and 'content-length' in missing:
+                    greennet.sendall(sock, '0\r\n\r\n')
+                
+                print log_req(env, headers_sent)
+                
+                for _ in env['wsgi.input']:
+                    pass
+                
+                if env['neti.http_version'] < (1,1):
                     break
-                connection = req['headers'].get('connection', '').lower()
+                connection = env.get('HTTP_CONNECTION', '').lower()
                 if connection == 'close':
                     break
+        except exceptions.Error, err:
+            greennet.sendall(sock, 'HTTP/1.1 400 Bad Request\r\n'
+                                   'Server: neti/%d.%d\r\n'
+                                   'Date: %s\r\n'
+                                   'Content-type: text/html\r\n'
+                                   'Content-length: 13\r\n\r\n'
+                                   'Bad request\r\n'
+                                   % (__version__[0],
+                                      __version__[1],
+                                      now_1123()))
+            print >> sys.stderr, log_err(repr(err), remote_addr)
         except greennet.ConnectionLost:
             pass
         except Exception:
-            pass
-        response_queue.append((None, None))
-        response_queue.wait_until_empty()
+            print >> sys.stderr, log_exc(remote_addr)
 
 
-def accept_connections(sock, handler):
+def accept_connections(sock, app):
     with closing(sock):
         while True:
             client, addr = greennet.accept(sock)
-            greennet.schedule(greenlet(handle_connection), client, handler)
+            greennet.schedule(greenlet(handle_connection), client, app)
 
 
 def listen(addr):

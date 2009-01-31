@@ -1,9 +1,10 @@
 import greennet
 
 from httpd import grammar, headers, message
-from httpd.exceptions import RequestTooLargeError, HeadersTooLargeError, \
-                            ChunkTooLargeError, BadChunkSizeError, \
-                            BadRequestError, UnimplementedError
+from httpd.util import IterFile, DummyFile
+from httpd.exceptions import (RequestTooLargeError, HeadersTooLargeError,
+                              ChunkTooLargeError, BadChunkSizeError,
+                              BadRequestError, UnimplementedError)
 
 
 __author__ = 'David Hain'
@@ -18,11 +19,13 @@ def recv_requests(sock, maxlen=8192):
             req = ''.join(
                 greennet.recv_until_maxlen(sock, '\r\n', maxlen,
                                            RequestTooLargeError))
-        req = message.request(req)
-        if req['version'] > (0,9):
-            req['headers'], req['entity']['headers'] = recv_headers(sock)
-            req['entity']['body'] = recv_entity(sock, req)
-        yield req
+        env = message.parse_request(req)
+        if env['neti.http_version'] > (0,9):
+            env.update(recv_headers(sock))
+            env['wsgi.input'] = IterFile(recv_entity(sock, env))
+        else:
+            env['wsgi.input'] = DummyFile()
+        yield env
 
 
 def recv_headers(sock, maxlen=1048576):
@@ -30,20 +33,20 @@ def recv_headers(sock, maxlen=1048576):
         greennet.recv_until_maxlen(sock, '\r\n\r\n', maxlen,
                                    HeadersTooLargeError))
     if head == '\r\n\r\n':
-        return ({}, {})
-    return headers.parse_separate(head[:-2])
+        return {}
+    return headers.wsgi_headers(head[:-2])
 
 
-def recv_entity(sock, req):
-    if 'transfer-encoding' in req['headers']:
-        if 'content-length' in req['entity']['headers']:
+def recv_entity(sock, env):
+    if 'HTTP_TRANSFER_ENCODING' in env:
+        if 'CONTENT_LENGTH' in env:
             raise BadRequestError()
-        if req['headers']['transfer-encoding'].lower() != 'chunked':
+        if env['HTTP_TRANSFER_ENCODING'].lower() != 'chunked':
             raise UnimplementedError()
         return recv_chunked(sock)
     else:
         try:
-            clen = int(req['entity']['headers'].get('content-length', 0))
+            clen = int(env.get('CONTENT_LENGTH', 0))
         except ValueError:
             raise BadRequestError()
         return greennet.recv_bytes(sock, clen)
@@ -64,5 +67,5 @@ def recv_chunked(sock):
             break
         for data in greennet.recv_bytes(sock, chunk_size):
             yield data
-    raise StopIteration(recv_headers(sock)[1])
+    raise StopIteration(recv_headers(sock))
 

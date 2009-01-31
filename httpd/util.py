@@ -14,7 +14,11 @@ __copyright__ = '2007-2008 ' + __author__
 __license__ = 'MIT'
 
 
-__all__ = []
+__all__ = ['fprop', 'normurl', 'decodeurl', 'IterFile', 'reloading']
+
+
+def fprop(func):
+    return property(**func())
 
 
 def normurl(req, slash):
@@ -36,14 +40,72 @@ def normurl(req, slash):
         parts[2] = p
         return message.MovedPermanently(req, urlunsplit(parts))
 
-__all__.append('normurl')
-
 
 def decodeurl(url):
     """Unquote and decode (utf-8) a url."""
     return unquote_plus(url).decode('utf-8')
 
-__all__.append('decodeurl')
+
+class DummyFile(object):
+    __slots__ = ()
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        raise StopIteration()
+    
+    def read(self, size=None):
+        return ''
+    
+    def readline(self):
+        return ''
+    
+    def readlines(self, hint=None):
+        return []
+
+
+class IterFile(object):
+    __slots__ = ('_iter', '_buf')
+    
+    def __init__(self, it):
+        self._iter = iter(it)
+        self._buf = ''
+    
+    def __iter__(self):
+        return iter(self.readline, '')
+    
+    def read(self, size=None):
+        while size is None or len(self._buf) < size:
+            try:
+                self._buf += self._iter.next()
+            except StopIteration:
+                break
+        data = self._buf[:size]
+        self._buf = self._buf[size:]
+        return data
+    
+    def readline(self):
+        i = -1
+        start = 0
+        while i < 0:
+            i = self._buf.find('\n', start)
+            start = len(self._buf)
+            try:
+                self._buf += self._iter.next()
+            except StopIteration:
+                break
+        if i < 0:
+            data = self._buf
+            self._buf = ''
+            return data
+        i += 1
+        data = self._buf[:i]
+        self._buf = self._buf[i:]
+        return data
+    
+    def readlines(self, hint=None):
+        return list(self)
 
 
 def reloading(f):
@@ -67,7 +129,5 @@ def reloading(f):
     wrapped.__name__ = f[1]
     wrapped.__doc__ = f.__doc__
     return wrapped
-
-__all__.append('reloading')
 
 

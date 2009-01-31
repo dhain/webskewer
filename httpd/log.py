@@ -6,15 +6,22 @@ __copyright__ = '2007-2008 ' + __author__
 __license__ = 'MIT'
 
 
-def log_req(req, resp, clen=None):
+def log_req(env, headers_sent, clen=None):
+    status, headers = headers_sent
     if clen is None:
-        clen = resp['entity']['headers'].get('content-length', '-')
-    return '%s - %s [%s] "%s" %d %s' % (
-        req.get('remote_addr', '-'),
-        req.get('username', '-'),
+        for name, value in headers:
+            if name.lower != 'content-length':
+                continue
+            clen = value
+            break
+        else:
+            clen = '-'
+    return '%s - %s [%s] "%s" %s %s' % (
+        env['REMOTE_ADDR'],
+        env.get('REMOTE_USER', '-'),
         now_log(),
-        req['request'].rstrip(),
-        resp['status'][0],
+        env['neti.http_request'].rstrip(),
+        status.split(' ', 1)[0],
         clen
     )
 

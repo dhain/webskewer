@@ -9,6 +9,20 @@ __copyright__ = '2007-2008 ' + __author__
 __license__ = 'MIT'
 
 
+def wsgi_headers(headers):
+    env = {}
+    for h, v in parse_headers(headers):
+        k = 'HTTP_' + h.upper().replace('-', '_')
+        v = v.strip()
+        if k in env:
+            env[k] += ', ' + v
+        else:
+            env[k] = v
+        if k in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
+            env[k[5:]] = v
+    return env
+
+
 def format_headers(hs):
     """Format a header dict as a string."""
     return ''.join(h + ': ' + format_value(v) + '\r\n'
