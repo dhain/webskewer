@@ -17,12 +17,7 @@ __license__ = 'MIT'
 
 
 from httpd.serve import accept_connections, listen
-from httpd.static_files import static_files
-sf = static_files('.')
-rx = re.compile(r'/(.*)')
-
-def handle_request(req):
-    return sf(req, rx.match(req['path']))
+from httpd.wsgi import HelloWorld
 
 
 def stop(trigger, sock):
@@ -45,7 +40,7 @@ def main():
     greennet.schedule(greenlet(stop), trigger, sock)
     greennet.switch()
     try:
-        accept_connections(sock, handle_request)
+        accept_connections(sock, HelloWorld)
     except (socket.error, select.error), err:
         if err.args[0] != errno.EBADF:
             raise

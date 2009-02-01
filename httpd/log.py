@@ -9,7 +9,7 @@ __license__ = 'MIT'
 def log_req(env, status, headers, clen=None):
     if clen is None:
         for name, value in headers:
-            if name.lower != 'content-length':
+            if name.lower() != 'content-length':
                 continue
             clen = value
             break

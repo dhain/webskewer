@@ -22,9 +22,9 @@ timestamp_to_dt = lambda t,tz=UTC: datetime.datetime.utcfromtimestamp(t).replace
 timestamp_to_1123 = lambda t,tz=UTC: dt_to_1123(timestamp_to_dt(t,tz))
 
 
-def check_if_modified_since(req, mt):
-    if 'if-modified-since' in req['headers']:
-        return dt_from_1123(req['headers']['if-modified-since']) < mt
+def check_if_modified_since(environ, mt):
+    if 'HTTP_IF_MODIFIED_SINCE' in environ:
+        return dt_from_1123(environ['HTTP_IF_MODIFIED_SINCE']) < mt
     return True
 
 

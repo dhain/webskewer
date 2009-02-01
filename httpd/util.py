@@ -14,7 +14,8 @@ __copyright__ = '2007-2008 ' + __author__
 __license__ = 'MIT'
 
 
-__all__ = ['fprop', 'normurl', 'decodeurl', 'IterFile', 'reloading']
+__all__ = ['fprop', 'normurl', 'decodeurl',
+           'DummyFile', 'IterFile', 'reloading']
 
 
 def fprop(func):

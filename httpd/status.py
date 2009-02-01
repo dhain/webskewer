@@ -52,4 +52,6 @@ def messages():
     messages = dict(locals().itervalues())
     return locals()
 
-locals().update(messages())
+messages = messages()
+__all__ = list(messages.keys())
+locals().update(messages)

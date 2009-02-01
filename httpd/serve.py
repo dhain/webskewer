@@ -8,7 +8,6 @@ from greennet import greenlet
 
 from httpd import message, exceptions, wsgi
 from httpd.log import log_req, log_exc, log_err
-from httpd.headers import format_headers
 from httpd.recv import recv_requests
 from httpd.time_util import now_1123
 from httpd.util import DummyFile
@@ -22,7 +21,7 @@ __version__ = (0,1)
 
 class RequestHandler(object):
     __slots__ = ('sock', 'application', 'environ', 'status',
-                 'headers', 'headers_sent', 'chunked')
+                 'headers', 'headers_sent', 'chunked', 'bytes_sent')
     
     def __init__(self, sock, application, environ):
         self.sock = sock
@@ -32,6 +31,7 @@ class RequestHandler(object):
         self.headers = None
         self.headers_sent = False
         self.chunked = False
+        self.bytes_sent = 0
     
     def handle(self):
         resp = None
@@ -41,11 +41,11 @@ class RequestHandler(object):
                 if data:
                     self.write(data)
             if not self.headers_sent:
-                self.write('')
+                self._write_headers()
         except Exception:
             print >> sys.stderr, log_exc(self.environ['REMOTE_ADDR'])
             if self.headers_sent:
-                return False
+                return
             self.application = wsgi.ServerError
             return self.handle()
         finally:
@@ -53,32 +53,36 @@ class RequestHandler(object):
                 resp.close()
         if self.chunked:
             greennet.sendall(self.sock, '0\r\n\r\n')
-        return True
+        return self.bytes_sent
+    
+    def _write_headers(self):
+        self.headers_sent = True
+        if self.environ['neti.http_version'] > (0,9):
+            missing = set(['server', 'date', 'content-length'])
+            headers = []
+            for header in self.headers:
+                lower = header[0].lower()
+                if lower in missing:
+                    missing.remove(lower)
+                headers.append('%s: %s\r\n' % header)
+            add_headers = []
+            if 'content-length' in missing and self.environ['neti.http_version'] > (0,9):
+                add_headers.append('Transfer-Encoding: chunked\r\n')
+                self.chunked = True
+            if 'date' in missing:
+                add_headers.append('Date: %s\r\n' % (now_1123(),))
+            if 'server' in missing:
+                add_headers.append('Server: neti/%d.%d\r\n' % __version__)
+            out = ''.join(['HTTP/1.1 %s\r\n' % (self.status,)] +
+                          add_headers + headers + ['\r\n'])
+            greennet.sendall(self.sock, out)
     
     def write(self, data):
         if self.headers is None:
             raise AssertionError('write() before start_response()')
         elif not self.headers_sent:
-            self.headers_sent = True
-            if self.environ['neti.http_version'] > (0,9):
-                missing = set(['server', 'date', 'content-length'])
-                headers = []
-                for header in self.headers:
-                    lower = header[0].lower()
-                    if lower in missing:
-                        missing.remove(lower)
-                    headers.append('%s: %s\r\n' % header)
-                add_headers = []
-                if 'content-length' in missing and self.environ['neti.http_version'] > (0,9):
-                    add_headers.append('Transfer-Encoding: chunked\r\n')
-                    self.chunked = True
-                if 'date' in missing:
-                    add_headers.append('Date: %s\r\n' % (now_1123(),))
-                if 'server' in missing:
-                    add_headers.append('Server: neti/%d.%d\r\n' % __version__)
-                out = ''.join(['HTTP/1.1 %s\r\n' % (self.status,)] +
-                              add_headers + headers + ['\r\n'])
-                greennet.sendall(self.sock, out)
+            self._write_headers()
+        self.bytes_sent += len(data)
         if self.chunked:
             data = '%x\r\n' % (len(data),) + data + '\r\n'
         greennet.sendall(self.sock, data)
@@ -120,9 +124,10 @@ def handle_connection(sock, application):
             for environ in recv_requests(sock):
                 environ.update(server_env)
                 handler = RequestHandler(sock, application, environ)
-                if not handler.handle():
+                bytes_sent = handler.handle()
+                if bytes_sent is None:
                     break
-                print log_req(environ, handler.status, handler.headers)
+                print log_req(environ, handler.status, handler.headers, bytes_sent)
                 for _ in environ['wsgi.input']:
                     pass
                 connection = environ.get('HTTP_CONNECTION', '').lower()
