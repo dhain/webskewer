@@ -13,9 +13,6 @@ from httpd.time_util import now_1123
 from httpd.util import DummyFile
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
 __version__ = (0,1)
 
 

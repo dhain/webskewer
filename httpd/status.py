@@ -1,8 +1,3 @@
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def messages():
     CONTINUE                = (100, "Continue")
     SWITCHING_PROTOCOLS     = (101, "Switching Protocols")

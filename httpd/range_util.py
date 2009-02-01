@@ -4,11 +4,6 @@ from httpd.grammar import range_spec
 from httpd.exceptions import BadRangeSpecError
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def parse_range(s):
     start, end = (int(x) if x else None for x in s.split('-', 1))
     if (start, end) == (None, None):
@@ -61,7 +56,8 @@ def parse_ranges(s):
     m = range_spec.match(s)
     if not m:
         raise BadRangeSpecError(s)
-    return (parse_range(r.strip()) for r in m.group(1).split(','))
+    for r in m.group(1).split(','):
+        yield parse_range(r.strip())
 
 
 def range_helper():

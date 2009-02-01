@@ -1,11 +1,6 @@
 from httpd.time_util import now_log
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def log_req(env, status, headers, clen=None):
     if clen is None:
         for name, value in headers:

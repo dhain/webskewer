@@ -1,11 +1,6 @@
 import re
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def regex_strings():
     octet   = r"(?:.|\n)"
     char    = ("[" + ''.join([chr(d) for d in xrange(128)])

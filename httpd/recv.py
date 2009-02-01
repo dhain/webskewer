@@ -7,11 +7,6 @@ from httpd.exceptions import (RequestTooLargeError, HeadersTooLargeError,
                               BadRequestError, UnimplementedError)
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def recv_requests(sock, maxlen=8192):
     while True:
         req = '\r\n'

@@ -5,11 +5,6 @@ from httpd import grammar
 from httpd.exceptions import BadVersionError, BadRequestError
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def parse_request(req):
     for r in (grammar.req1x, grammar.req09):
         m = r.match(req)

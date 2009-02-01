@@ -4,11 +4,6 @@ from httpd.exceptions import BadHeaderError
 
 """HTTP header helper functions."""
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def parse_headers(s):
     """Parse a string of headers."""
     start = 0

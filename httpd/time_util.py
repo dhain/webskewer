@@ -2,11 +2,6 @@ import datetime
 from pytz import timezone
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 UTC = timezone('UTC')
 localtime = timezone('US/Pacific')
 

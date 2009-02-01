@@ -9,11 +9,6 @@ from httpd.exceptions import RangePastEOFError, BadRangeSpecError
 from httpd.util import normurl, decodeurl
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 def read_range(file, (start, end), bufsize=8192):
     file.seek(start)
     remain = True if end is None else end - start

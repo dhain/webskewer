@@ -7,13 +7,6 @@ from urlparse import urlunsplit
 from httpd import message
 
 
-"""http helper utilites."""
-
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 __all__ = ['fprop', 'normurl', 'decodeurl',
            'DummyFile', 'IterFile', 'reloading']
 

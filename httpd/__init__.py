@@ -1,11 +1,6 @@
 from httpd.main import main
 
 
-__author__ = 'David Hain'
-__copyright__ = '2007-2008 ' + __author__
-__license__ = 'MIT'
-
-
 if __name__ == '__main__':
     #import cProfile
     #import pstats
