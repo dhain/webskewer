@@ -12,7 +12,7 @@ from greennet.trigger import Trigger
 
 
 from httpd.serve import accept_connections, listen
-from httpd.wsgi import HelloWorld
+from httpd.static_files import static_files
 
 
 def stop(trigger, sock):
@@ -35,7 +35,7 @@ def main():
     greennet.schedule(greenlet(stop), trigger, sock)
     greennet.switch()
     try:
-        accept_connections(sock, HelloWorld)
+        accept_connections(sock, static_files(u'.'))
     except (socket.error, select.error), err:
         if err.args[0] != errno.EBADF:
             raise

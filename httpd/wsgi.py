@@ -37,6 +37,53 @@ def ServerError(environ, start_response):
     return [message]
 
 
+def NotFound(environ, start_response):
+    msg = 'Not found.'
+    stc, stm = st = status.NOT_FOUND
+    message = ee % locals()
+    start_response('%d %s' % st,
+                   [('Content-type', 'text/html'),
+                    ('Content-length', str(len(message)))])
+    return [message]
+
+
+def NotModified(environ, start_response):
+    msg = 'Not modified.'
+    stc, stm = st = status.NOT_MODIFIED
+    message = ee % locals()
+    start_response('%d %s' % st,
+                   [('Content-type', 'text/html'),
+                    ('Content-length', str(len(message)))])
+    return [message]
+
+
+def MovedPermanently(location):
+    def MovedPermanently(environ, start_response):
+        msg = ('The requested resource has moved to '
+               '<a href="%(location)s">%(location)s</a>.' % locals())
+        stc, stm = st = status.MOVED_PERMANENTLY
+        message = ee % locals()
+        start_response('%d %s' % st,
+                       [('Location', location),
+                        ('Content-type', 'text/html'),
+                        ('Content-length', str(len(message)))])
+        return [message]
+    return MovedPermanently
+
+
+def RangeNotSatisfiable(size):
+    def RangeNotSatisfiable(environ, start_response):
+        msg = 'Requested range not satisfiable.'
+        stc, stm = st = status.RANGE_NOT_SATISFIABLE
+        message = ee % locals()
+        start_response('%d %s' % st,
+                       [('Content-range', '*/%d' % (size,)),
+                        ('Content-type', 'text/html'),
+                        ('Content-length', str(len(message)))])
+        return [message]
+    return RangeNotSatisfiable
+
+
 def HelloWorld(environ, start_response):
     msg = 'Hello World!'
     stc, stm = st = status.OK
@@ -62,13 +109,6 @@ def MethodNotAllowed(req, meths):
                     ent=ErrEnt(st, req['uri'] + ' does not support ' +
                                    req['method'],
                                {'allow': ', '.join(meths)}))
-
-
-def RangeNotSatisfiable(req, size):
-    st = status.RANGE_NOT_SATISFIABLE
-    return Response(req, status=st,
-                    ent=ErrEnt(st, 'Requested range not satisfiable',
-                               {'content-range': '*/%d' % (size,)}))
 
 
 def PartialContent(req, ranges, clen=None):

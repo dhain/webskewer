@@ -4,7 +4,7 @@ from os.path import getmtime
 from urllib import unquote_plus
 from urlparse import urlunsplit
 
-from httpd import message
+from httpd import wsgi
 
 
 __all__ = ['fprop', 'normurl', 'decodeurl',
@@ -15,7 +15,7 @@ def fprop(func):
     return property(**func())
 
 
-def normurl(req, slash):
+def normurl(environ, slash):
     """Check a request's path for trailing slashes.
     
     If the slash argument is True, and the request's path does not have a
@@ -23,16 +23,20 @@ def normurl(req, slash):
     a trailing slash. If slash is True and the request's path does have a
     trailing slash, return None. Vice-versa if the slash argument is False.
     """
-    p = req['path']
+    p = environ['neti.split_uri'][2]
+    changed = False
     if slash:
         if not p.endswith('/'):
             p += '/'
+            changed = True
     else:
-        p = p.rstrip('/')
-    if req['path'] != p:
-        parts = list(req['splituri'])
+        if p.endswith('/'):
+            p = p.rstrip('/')
+            changed = True
+    if changed:
+        parts = list(environ['neti.split_uri'])
         parts[2] = p
-        return message.MovedPermanently(req, urlunsplit(parts))
+        return wsgi.MovedPermanently(urlunsplit(parts))
 
 
 def decodeurl(url):
