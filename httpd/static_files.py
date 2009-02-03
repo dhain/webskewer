@@ -47,7 +47,7 @@ class static_files(object):
             st = os.stat(fn)
             mt = time_util.timestamp_to_dt(st.st_mtime, time_util.localtime)
             if not time_util.check_if_modified_since(environ, mt):
-                return wsgi.NotModified(environ, start_response)
+                return wsgi.NotModified()(environ, start_response)
             
             clen = st.st_size
             ctype, cenc = mimetypes.guess_type(fn)
@@ -136,4 +136,4 @@ class static_files(object):
             elif os.path.isfile(fn):
                 return (normurl(environ, False) or
                         self.send_file(fn))(environ, start_response)
-        return wsgi.NotFound(environ, start_response)
+        return wsgi.NotFound()(environ, start_response)

@@ -43,7 +43,7 @@ class RequestHandler(object):
             print >> sys.stderr, log_exc(self.environ['REMOTE_ADDR'])
             if self.headers_sent:
                 return True # signal caller to close connection
-            self.application = wsgi.ServerError
+            self.application = wsgi.ServerError()
             return self.handle()
         finally:
             if hasattr(resp, 'close'):
@@ -139,7 +139,7 @@ def handle_connection(sock, application):
                 'neti.http_version': (1,1)
             }
             environ.update(server_env)
-            handler = RequestHandler(sock, wsgi.BadRequest, environ)
+            handler = RequestHandler(sock, wsgi.BadRequest(), environ)
             handler.handle()
             print >> sys.stderr, log_err(repr(err), remote_addr)
         except greennet.ConnectionLost:

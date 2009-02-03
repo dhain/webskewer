@@ -10,105 +10,64 @@ ee = ('<html><head><title>%(stc)d %(stm)s</title></head>'
       '<body><h1>%(stc)d %(stm)s</h1><p>%(msg)s</p></body></html>\r\n')
 
 
-def BadRequest(environ, start_response):
-    msg = 'Bad request.'
-    stc, stm = st = status.BAD_REQUEST
-    message = ee % locals()
-    start_response('%d %s' % st,
-                   [('Content-type', 'text/html'),
-                    ('Content-length', str(len(message)))])
-    return [message]
+def Simple(message, status=status.OK, headers=(), ctype='text/html', exc_info=()):
+    def app(environ, start_response):
+        stc, stm = status
+        msg = message
+        body = ee % locals()
+        start_response('%d %s' % status,
+                       [('Content-type', ctype),
+                        ('Content-length', str(len(body)))] + list(headers),
+                       *exc_info)
+        return [body]
+    return app
 
 
-def ServerError(environ, start_response):
-    msg = 'An internal server error has occurred. Please try again later.'
-    exc_info = sys.exc_info()
-    if exc_info == (None, None, None):
-        exc_info = ()
-    else:
-        exc_info = (exc_info,)
-    stc, stm = st = status.SERVER_ERROR
-    message = ee % locals()
-    start_response('%d %s' % st,
-                   [('Content-type', 'text/html'),
-                    ('Content-length', str(len(message)))],
-                   *exc_info)
-    exc_info = None
-    return [message]
+def BadRequest():
+    return Simple('Bad request.', status.BAD_REQUEST)
 
 
-def NotFound(environ, start_response):
-    msg = 'Not found.'
-    stc, stm = st = status.NOT_FOUND
-    message = ee % locals()
-    start_response('%d %s' % st,
-                   [('Content-type', 'text/html'),
-                    ('Content-length', str(len(message)))])
-    return [message]
+def ServerError():
+    return Simple('An internal server error has occurred. '
+                  'Please try again later.',
+                  status.SERVER_ERROR, exc_info=sys.exc_info())
 
 
-def NotModified(environ, start_response):
-    msg = 'Not modified.'
-    stc, stm = st = status.NOT_MODIFIED
-    message = ee % locals()
-    start_response('%d %s' % st,
-                   [('Content-type', 'text/html'),
-                    ('Content-length', str(len(message)))])
-    return [message]
+def NotFound():
+    return Simple('Not found.', status.NOT_FOUND)
+
+
+def NotModified():
+    return Simple('Not modified.', status.NOT_MODIFIED)
 
 
 def MovedPermanently(location):
-    def MovedPermanently(environ, start_response):
-        msg = ('The requested resource has moved to '
-               '<a href="%(location)s">%(location)s</a>.' % locals())
-        stc, stm = st = status.MOVED_PERMANENTLY
-        message = ee % locals()
-        start_response('%d %s' % st,
-                       [('Location', location),
-                        ('Content-type', 'text/html'),
-                        ('Content-length', str(len(message)))])
-        return [message]
-    return MovedPermanently
+    return Simple('The requested resource has moved to '
+                  '<a href="%(location)s">%(location)s</a>.' % locals(),
+                  status.MOVED_PERMANENTLY,
+                  [('Location', location)])
 
 
 def RangeNotSatisfiable(size):
-    def RangeNotSatisfiable(environ, start_response):
-        msg = 'Requested range not satisfiable.'
-        stc, stm = st = status.RANGE_NOT_SATISFIABLE
-        message = ee % locals()
-        start_response('%d %s' % st,
-                       [('Content-range', '*/%d' % (size,)),
-                        ('Content-type', 'text/html'),
-                        ('Content-length', str(len(message)))])
-        return [message]
-    return RangeNotSatisfiable
+   return Simple('Requested range not satisfiable.',
+                 status.RANGE_NOT_SATISFIABLE,
+                 [('Content-range', '*/%d' % (size,))])
 
 
-def HelloWorld(environ, start_response):
-    msg = 'Hello World!'
-    stc, stm = st = status.OK
-    message = ee % locals()
-    start_response('%d %s' % st,
-                   [('Content-type', 'text/html'),
-                    ('Content-length', str(len(message)))])
-    return [message]
+def HelloWorld():
+    return Simple('Hello World!', ctype='text/plain')
 
 
-def Options(req, meths):
-    st = status.OK
-    m = ', '.join(meths)
-    return Response(req, status=st,
-                    ent=ErrEnt(st, req['uri'] + ' supports the '
-                                   'following methods: ' + m,
-                               {'allow': m}))
+def Options(methods):
+    methods = ', '.join(methods)
+    return Simple('The requested resource supports the following methods: ' +
+                  methods, headers=[('Allow', methods)])
 
 
-def MethodNotAllowed(req, meths):
-    st = status.METHOD_NOT_ALLOWED
-    return Response(req, status=st,
-                    ent=ErrEnt(st, req['uri'] + ' does not support ' +
-                                   req['method'],
-                               {'allow': ', '.join(meths)}))
+def MethodNotAllowed(methods):
+    return Simple('Method not allowed.',
+                  status.METHOD_NOT_ALLOWED,
+                  [('Allow', ', '.join(methods))])
 
 
 def PartialContent(req, ranges, clen=None):
