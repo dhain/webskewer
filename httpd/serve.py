@@ -42,7 +42,7 @@ class RequestHandler(object):
         except Exception:
             print >> sys.stderr, log_exc(self.environ['REMOTE_ADDR'])
             if self.headers_sent:
-                return
+                return True # signal caller to close connection
             self.application = wsgi.ServerError
             return self.handle()
         finally:
@@ -50,7 +50,9 @@ class RequestHandler(object):
                 resp.close()
         if self.chunked:
             greennet.sendall(self.sock, '0\r\n\r\n')
-        return self.bytes_sent
+        print log_req(self.environ, self.status, self.headers, self.bytes_sent)
+        for _ in self.environ['wsgi.input']:
+            pass
     
     def _write_headers(self):
         self.headers_sent = True
@@ -124,12 +126,8 @@ def handle_connection(sock, application):
             for environ in recv_requests(sock):
                 environ.update(server_env)
                 handler = RequestHandler(sock, application, environ)
-                bytes_sent = handler.handle()
-                if bytes_sent is None:
+                if handler.handle():
                     break
-                print log_req(environ, handler.status, handler.headers, bytes_sent)
-                for _ in environ['wsgi.input']:
-                    pass
                 connection = environ.get('HTTP_CONNECTION', '').lower()
                 if environ['neti.http_version'] < (1,1):
                     break
