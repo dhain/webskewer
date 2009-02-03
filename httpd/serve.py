@@ -63,9 +63,12 @@ class RequestHandler(object):
                     missing.remove(lower)
                 headers.append('%s: %s\r\n' % header)
             add_headers = []
-            if 'content-length' in missing and self.environ['neti.http_version'] > (0,9):
-                add_headers.append('Transfer-Encoding: chunked\r\n')
-                self.chunked = True
+            if 'content-length' in missing:
+                if self.environ['neti.http_version'] > (1,0):
+                    add_headers.append('Transfer-Encoding: chunked\r\n')
+                    self.chunked = True
+                else:
+                    self.environ['HTTP_CONNECTION'] = 'close'
             if 'date' in missing:
                 add_headers.append('Date: %s\r\n' % (now_1123(),))
             if 'server' in missing:
