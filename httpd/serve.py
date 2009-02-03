@@ -50,7 +50,8 @@ class RequestHandler(object):
                 resp.close()
         if self.chunked:
             greennet.sendall(self.sock, '0\r\n\r\n')
-        print log_req(self.environ, self.status, self.headers, self.bytes_sent)
+        if not 'neti.bad_request' in self.environ:
+            print log_req(self.environ, self.status, self.headers, self.bytes_sent)
         for _ in self.environ['wsgi.input']:
             pass
     
@@ -126,7 +127,11 @@ def handle_connection(sock, application):
             for environ in recv_requests(sock):
                 environ.update(server_env)
                 handler = RequestHandler(sock, application, environ)
-                if handler.handle():
+                try:
+                    if handler.handle():
+                        break
+                except Exception:
+                    print >> sys.stderr, log_exc(remote_addr)
                     break
                 connection = environ.get('HTTP_CONNECTION', '').lower()
                 if environ['neti.http_version'] < (1,1):
@@ -136,7 +141,8 @@ def handle_connection(sock, application):
         except exceptions.Error, err:
             environ = {
                 'wsgi.input': DummyFile(),
-                'neti.http_version': (1,1)
+                'neti.http_version': (1,1),
+                'neti.bad_request': True,
             }
             environ.update(server_env)
             handler = RequestHandler(sock, wsgi.BadRequest(), environ)

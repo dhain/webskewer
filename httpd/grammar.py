@@ -65,7 +65,7 @@ def regex_strings():
         r"(?:,%s*(?:(?:\d+-\d*)|(?:-\d+)))*)$" % (lws,)
     
     chunk_ext  = r"(?:;%s(?:=(?:%s|%s))?)" % (token, token, qstring)
-    chunk_size = r"(%s+)\s*%s*\s*%s" % (hexdig, chunk_ext, crlf)
+    chunk_size = r"(%s+)\s*%s*\s*%s$" % (hexdig, chunk_ext, crlf)
     
     http_version = r"HTTP/(\d+)\.(\d+)"
     abs_uri      = r"(?:[a-zA-Z][a-zA-Z0-9+-.]*://[^/?#\s]+/[^#\s]*)"
