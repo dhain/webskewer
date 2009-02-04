@@ -30,8 +30,8 @@ def parse_request(req):
         'PATH_INFO': urllib.unquote(splituri.path),
         'QUERY_STRING': splituri.query,
         'SERVER_PROTOCOL': 'HTTP/%d.%d' % version,
-        'neti.http_request': req,
-        'neti.http_uri': uri,
-        'neti.http_version': version,
-        'neti.split_uri': splituri,
+        'webskewer.http_request': req,
+        'webskewer.http_uri': uri,
+        'webskewer.http_version': version,
+        'webskewer.split_uri': splituri,
     }

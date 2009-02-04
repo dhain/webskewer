@@ -15,7 +15,7 @@ def recv_requests(sock, maxlen=8192):
                 greennet.recv_until_maxlen(sock, '\r\n', maxlen,
                                            RequestTooLargeError))
         env = message.parse_request(req)
-        if env['neti.http_version'] > (0,9):
+        if env['webskewer.http_version'] > (0,9):
             env.update(recv_headers(sock))
             env['wsgi.input'] = IterFile(recv_entity(sock, env))
         else:

@@ -23,7 +23,7 @@ def normurl(environ, slash):
     a trailing slash. If slash is True and the request's path does have a
     trailing slash, return None. Vice-versa if the slash argument is False.
     """
-    p = environ['neti.split_uri'][2]
+    p = environ['webskewer.split_uri'][2]
     changed = False
     if slash:
         if not p.endswith('/'):
@@ -34,7 +34,7 @@ def normurl(environ, slash):
             p = p.rstrip('/')
             changed = True
     if changed:
-        parts = list(environ['neti.split_uri'])
+        parts = list(environ['webskewer.split_uri'])
         parts[2] = p
         return wsgi.MovedPermanently(urlunsplit(parts))
 

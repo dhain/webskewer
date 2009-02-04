@@ -14,7 +14,7 @@ def log_req(env, status, headers, clen=None):
         env['REMOTE_ADDR'],
         env.get('REMOTE_USER', '-'),
         now_log(),
-        env['neti.http_request'].rstrip(),
+        env['webskewer.http_request'].rstrip(),
         status.split(' ', 1)[0],
         clen
     )

@@ -50,14 +50,14 @@ class RequestHandler(object):
                 resp.close()
         if self.chunked:
             greennet.sendall(self.sock, '0\r\n\r\n')
-        if not 'neti.bad_request' in self.environ:
+        if not 'webskewer.bad_request' in self.environ:
             print log_req(self.environ, self.status, self.headers, self.bytes_sent)
         for _ in self.environ['wsgi.input']:
             pass
     
     def _write_headers(self):
         self.headers_sent = True
-        if self.environ['neti.http_version'] > (0,9):
+        if self.environ['webskewer.http_version'] > (0,9):
             missing = set(['server', 'date', 'content-length'])
             headers = []
             for header in self.headers:
@@ -67,7 +67,7 @@ class RequestHandler(object):
                 headers.append('%s: %s\r\n' % header)
             add_headers = []
             if 'content-length' in missing:
-                if self.environ['neti.http_version'] > (1,0):
+                if self.environ['webskewer.http_version'] > (1,0):
                     add_headers.append('Transfer-Encoding: chunked\r\n')
                     self.chunked = True
                 else:
@@ -75,7 +75,7 @@ class RequestHandler(object):
             if 'date' in missing:
                 add_headers.append('Date: %s\r\n' % (now_1123(),))
             if 'server' in missing:
-                add_headers.append('Server: neti/%d.%d\r\n' % __version__)
+                add_headers.append('Server: webskewer/%d.%d\r\n' % __version__)
             out = ''.join(['HTTP/1.1 %s\r\n' % (self.status,)] +
                           add_headers + headers + ['\r\n'])
             greennet.sendall(self.sock, out)
@@ -134,15 +134,15 @@ def handle_connection(sock, application):
                     print >> sys.stderr, log_exc(remote_addr)
                     break
                 connection = environ.get('HTTP_CONNECTION', '').lower()
-                if environ['neti.http_version'] < (1,1):
+                if environ['webskewer.http_version'] < (1,1):
                     break
                 if connection == 'close':
                     break
         except exceptions.Error, err:
             environ = {
                 'wsgi.input': DummyFile(),
-                'neti.http_version': (1,1),
-                'neti.bad_request': True,
+                'webskewer.http_version': (1,1),
+                'webskewer.bad_request': True,
             }
             environ.update(server_env)
             handler = RequestHandler(sock, wsgi.BadRequest(), environ)
