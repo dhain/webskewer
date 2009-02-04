@@ -6,16 +6,15 @@ from httpd import status
 __all__ = ['BadRequest', 'ServerError', 'HelloWorld']
 
 
-ee = ('<html><head><title>%(stc)d %(stm)s</title></head>'
-      '<body><h1>%(stc)d %(stm)s</h1><p>%(msg)s</p></body></html>\r\n')
+ee = ('<html><head><title>%(status)s</title></head>'
+      '<body><h1>%(status)s</h1><p>%(msg)s</p></body></html>\r\n')
 
 
 def Simple(message, status=status.OK, headers=(), ctype='text/html', exc_info=()):
     def app(environ, start_response):
-        stc, stm = status
         msg = message
         body = ee % locals()
-        start_response('%d %s' % status,
+        start_response(status,
                        [('Content-type', ctype),
                         ('Content-length', str(len(body)))] + list(headers),
                        *exc_info)

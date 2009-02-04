@@ -98,7 +98,7 @@ class static_files(object):
                 if cenc:
                     headers.append(('Content-encoding', cenc))
                 headers.append(('Content-length', clen))
-                start_response('%d %s' % status.OK, headers)
+                start_response(status.OK, headers)
                 return read_range(f, (0, None))
         return send_file
     
@@ -114,7 +114,7 @@ class static_files(object):
             items = u''.join(u'<li><a href="%s">%s</a></li>' % (fn, fn)
                              for fn in files).encode('utf-8')
             body = self.dir_listing % locals()
-            start_response('%d %s' % status.OK,
+            start_response(status.OK,
                            [('Content-type', 'text/html; charset=utf-8'),
                             ('Content-length', str(len(body)))])
             return [body]
