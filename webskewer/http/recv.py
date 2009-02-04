@@ -1,8 +1,8 @@
 import greennet
 
-from httpd import grammar, headers, message
-from httpd.util import IterFile, DummyFile
-from httpd.exceptions import (RequestTooLargeError, HeadersTooLargeError,
+from webskewer.http import grammar, headers, message
+from webskewer.http.util import IterFile, DummyFile
+from webskewer.http.exceptions import (RequestTooLargeError, HeadersTooLargeError,
                               ChunkTooLargeError, BadChunkSizeError,
                               BadRequestError, UnimplementedError)
 

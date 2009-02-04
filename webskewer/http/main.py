@@ -11,8 +11,8 @@ from greennet import greenlet
 from greennet.trigger import Trigger
 
 
-from httpd.serve import accept_connections, listen
-from httpd.static_files import static_files
+from webskewer.http.serve import accept_connections, listen
+from webskewer.http.static_files import static_files
 
 
 def stop(trigger, sock):

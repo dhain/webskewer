@@ -2,9 +2,9 @@ import os
 import datetime
 import mimetypes
 
-from httpd import time_util, range_util, status, wsgi
-from httpd.exceptions import RangePastEOFError, BadRangeSpecError
-from httpd.util import normurl, decodeurl
+from webskewer.http import time_util, range_util, status, wsgi
+from webskewer.http.exceptions import RangePastEOFError, BadRangeSpecError
+from webskewer.http.util import normurl, decodeurl
 
 
 def read_range(file, (start, end), bufsize=8192):

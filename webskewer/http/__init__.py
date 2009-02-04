@@ -1,4 +1,4 @@
-from httpd.main import main
+from webskewer.http.main import main
 
 
 if __name__ == '__main__':

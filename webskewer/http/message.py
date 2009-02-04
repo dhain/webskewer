@@ -1,8 +1,8 @@
 import urllib
 from urlparse import urlsplit
 
-from httpd import grammar
-from httpd.exceptions import BadVersionError, BadRequestError
+from webskewer.http import grammar
+from webskewer.http.exceptions import BadVersionError, BadRequestError
 
 
 def parse_request(req):

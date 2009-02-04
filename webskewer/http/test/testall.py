@@ -16,19 +16,19 @@ def mod_import(name):
 
 
 modules = (
-    'httpd',
-    'httpd.headers',
-    'httpd.log',
-    'httpd.main',
-    'httpd.message',
-    'httpd.multipart',
-    'httpd.range_util',
-    'httpd.recv',
-    'httpd.serve',
-    'httpd.static_files',
-    'httpd.status',
-    'httpd.time_util',
-    'httpd.util',
+    'webskewer.http',
+    'webskewer.http.headers',
+    'webskewer.http.log',
+    'webskewer.http.main',
+    'webskewer.http.message',
+    'webskewer.http.multipart',
+    'webskewer.http.range_util',
+    'webskewer.http.recv',
+    'webskewer.http.serve',
+    'webskewer.http.static_files',
+    'webskewer.http.status',
+    'webskewer.http.time_util',
+    'webskewer.http.util',
 )
 
 test_modules = (
