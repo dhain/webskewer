@@ -24,7 +24,7 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Server",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    packages=find_packages(),
+    packages=find_packages(exclude='tests'),
     namespace_packages=['webskewer'],
     install_requires=[
         'greennet',
