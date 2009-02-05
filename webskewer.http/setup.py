@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 version = '0.1.0'
 
 setup(
-    name='webskewer',
+    name='webskewer.http',
     version=version,
     description=('An HTTP/1.1 compliant WSGI server that '
                  'uses a greenlet-based scheduling model'),
