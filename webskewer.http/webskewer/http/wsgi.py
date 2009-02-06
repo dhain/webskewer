@@ -17,7 +17,7 @@ def Simple(message, status=status.OK, headers=(), ctype='text/html', exc_info=()
         start_response(status,
                        [('Content-type', ctype),
                         ('Content-length', str(len(body)))] + list(headers),
-                       *exc_info)
+                       exc_info)
         return [body]
     return app
 
