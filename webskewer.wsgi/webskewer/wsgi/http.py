@@ -40,6 +40,13 @@ def MovedPermanently(location):
                   [('Location', location)])
 
 
+def SeeOther(location):
+    return Simple('The requested resource was found at '
+                  '<a href="%(location)s">%(location)s</a>.' % locals(),
+                  '303 See Other',
+                  [('Location', location)])
+
+
 def RangeNotSatisfiable(size):
    return Simple('Requested range not satisfiable.',
                  '416 Requested Range Not Satisfiable',
