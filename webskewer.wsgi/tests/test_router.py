@@ -81,6 +81,18 @@ class TestRouter(unittest.TestCase):
         
         assert called
     
+    def test_options_star(self):
+        def app(environ, start_response):
+            assert False, 'application was called'
+        
+        def start_response(status, headers, exc_info=None):
+            assert exc_info is None
+            assert status.startswith('200 '), repr(status)
+        
+        router([
+            (re.compile(r'/'), ['GET'], app)
+        ])(environ('OPTIONS', '*'), start_response)
+    
     def test_get(self):
         called = []
         
@@ -93,6 +105,23 @@ class TestRouter(unittest.TestCase):
         router([
             (re.compile(r'/'), ['GET'], app)
         ])(environ(), start_response)
+        
+        assert called
+    
+    def test_script_name(self):
+        called = []
+        
+        def app(environ, start_response):
+            called.append(True)
+            assert environ['SCRIPT_NAME'] == '/something', repr(environ['SCRIPT_NAME'])
+            assert environ['PATH_INFO'] == '/else', repr(environ['PATH_INFO'])
+        
+        def start_response(status, headers, exc_info=None):
+            assert False, 'start_response was called'
+        
+        router([
+            (re.compile(r'/something'), ['GET'], app)
+        ])(environ(uri='/something/else'), start_response)
         
         assert called
     

@@ -1,4 +1,4 @@
-from webskewer.wsgi.http import NotFound, Options, MethodNotAllowed
+from webskewer.wsgi.http import NotFound, Options, MethodNotAllowed, Simple
 
 
 class router(object):
@@ -7,7 +7,7 @@ class router(object):
     
     def __call__(self, environ, start_response):
         if environ['REQUEST_METHOD'] == 'OPTIONS' and environ['PATH_INFO'] == '*':
-            pass
+            return Simple('Hello, world')(environ, start_response)
         for rx, methods, application in self.routes:
             m = rx.match(environ['PATH_INFO'])
             if m is None:
