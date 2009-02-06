@@ -1,10 +1,13 @@
 from __future__ import with_statement
 from contextlib import closing
 import socket
+import select
+import errno
 import sys
 
 import greennet
 from greennet import greenlet
+from greennet.trigger import Trigger
 
 from webskewer.http import message, exceptions, wsgi
 from webskewer.http.log import log_req, log_exc, log_err
@@ -168,3 +171,28 @@ def listen(addr):
     sock.listen(socket.SOMAXCONN)
     return sock
 
+
+def stop(trigger, sock):
+    trigger.wait()
+    sock.close()
+
+
+def signal_handler(trigger):
+    def handle(sig, frm):
+        trigger.pull()
+    return handle
+
+
+def serve(application, addr=('', 8000)):
+    trigger = Trigger()
+    import signal
+    handler = signal_handler(trigger)
+    signal.signal(signal.SIGINT, handler)
+    sock = listen(addr)
+    greennet.schedule(greenlet(stop), trigger, sock)
+    greennet.switch()
+    try:
+        accept_connections(sock, application)
+    except (socket.error, select.error), err:
+        if err.args[0] != errno.EBADF:
+            raise

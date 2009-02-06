@@ -18,7 +18,8 @@ class router(object):
                 return MethodNotAllowed(methods)(environ, start_response)
             environ['SCRIPT_NAME'] += m.group(0)
             environ['PATH_INFO'] = environ['PATH_INFO'][m.end():]
-            environ['webskewer.route.match'] = m
+            environ['webskewer.route.args'] = m.groups()
+            environ['webskewer.route.kwargs'] = m.groupdict()
             return application(environ, start_response)
         else:
             return NotFound()(environ, start_response)
