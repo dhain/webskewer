@@ -24,6 +24,8 @@ class without_slash(object):
         if not path.endswith('/'):
             return self.application(environ, start_response)
         location = path.rstrip('/')
+        if not location:
+            return self.application(environ, start_response)
         if environ.get('QUERY_STRING'):
             location += '?' + environ['QUERY_STRING']
         return MovedPermanently(location)(environ, start_response)
