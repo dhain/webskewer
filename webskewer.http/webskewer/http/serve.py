@@ -108,7 +108,7 @@ class RequestHandler(object):
         return self.write
 
 
-def handle_connection(sock, application):
+def handle_connection(sock, application, ssl=False):
     remote_addr, remote_port = sock.getpeername()[:2]
     local_addr, local_port = sock.getsockname()[:2]
     server_env = {
@@ -119,12 +119,14 @@ def handle_connection(sock, application):
         'SERVER_NAME': 'localhost',
         'SCRIPT_NAME': '',
         'wsgi.version': (1,0),
-        'wsgi.url_scheme': 'http',
+        'wsgi.url_scheme': 'http' if not ssl else 'https',
         'wsgi.errors': sys.stderr,
         'wsgi.multithread': False,
         'wsgi.multiprocess': False,
         'wsgi.run_once': False,
     }
+    if ssl:
+        server_env['HTTPS'] = 'on'
     with closing(sock):
         try:
             for environ in recv_requests(sock):
@@ -162,6 +164,23 @@ def accept_connections(sock, application):
         while True:
             client, addr = greennet.accept(sock)
             greennet.schedule(greenlet(handle_connection), client, application)
+
+
+try:
+    import greennet.ssl
+except ImportError:
+    pass
+else:
+    def accept_ssl(sock, application, cert, verify=None, timeout=None):
+        with closing(sock):
+            while True:
+                client, addr = greennet.accept(sock)
+                try:
+                    client = greennet.ssl.accept(client, cert, verify, timeout)
+                except greennet.Timeout:
+                    client.close()
+                    continue
+                greennet.schedule(greenlet(handle_connection), client, application, True)
 
 
 def listen(addr):
