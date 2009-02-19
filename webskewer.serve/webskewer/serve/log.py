@@ -1,4 +1,4 @@
-from webskewer.http.time_util import now_log
+from webskewer.serve.time_util import now_log
 
 
 def log_req(env, status, headers, clen=None):

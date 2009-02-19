@@ -1,6 +1,6 @@
 import sys
 
-from webskewer.http import status
+from webskewer.serve import status
 
 
 __all__ = ['BadRequest', 'ServerError', 'HelloWorld']

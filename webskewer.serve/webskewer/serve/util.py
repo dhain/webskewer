@@ -4,7 +4,7 @@ from os.path import getmtime
 from urllib import unquote_plus
 from urlparse import urlunsplit
 
-from webskewer.http import wsgi
+from webskewer.serve import wsgi
 
 
 __all__ = ['fprop', 'normurl', 'decodeurl',

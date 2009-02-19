@@ -1,5 +1,5 @@
-from webskewer.http import grammar
-from webskewer.http.exceptions import BadHeaderError
+from webskewer.serve import grammar
+from webskewer.serve.exceptions import BadHeaderError
 
 
 """HTTP header helper functions."""

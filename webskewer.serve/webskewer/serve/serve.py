@@ -9,11 +9,11 @@ import greennet
 from greennet import greenlet
 from greennet.trigger import Trigger
 
-from webskewer.http import message, exceptions, wsgi
-from webskewer.http.log import log_req, log_exc, log_err
-from webskewer.http.recv import recv_requests
-from webskewer.http.time_util import now_1123
-from webskewer.http.util import DummyFile
+from webskewer.serve import message, exceptions, wsgi
+from webskewer.serve.log import log_req, log_exc, log_err
+from webskewer.serve.recv import recv_requests
+from webskewer.serve.time_util import now_1123
+from webskewer.serve.util import DummyFile
 
 
 __version__ = (0,1)
