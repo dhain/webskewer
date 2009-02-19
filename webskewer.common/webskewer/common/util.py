@@ -4,39 +4,12 @@ from os.path import getmtime
 from urllib import unquote_plus
 from urlparse import urlunsplit
 
-from webskewer.wsgi.http import MovedPermanently
 
-
-__all__ = ['fprop', 'normurl', 'decodeurl',
-           'DummyFile', 'IterFile', 'reloading']
+__all__ = ['fprop', 'decodeurl', 'DummyFile', 'IterFile', 'reloading']
 
 
 def fprop(func):
     return property(**func())
-
-
-def normurl(environ, slash):
-    """Check a request's path for trailing slashes.
-    
-    If the slash argument is True, and the request's path does not have a
-    trailing slash, return a MovedPermanently response to the same path, with
-    a trailing slash. If slash is True and the request's path does have a
-    trailing slash, return None. Vice-versa if the slash argument is False.
-    """
-    p = environ['webskewer.split_uri'][2]
-    changed = False
-    if slash:
-        if not p.endswith('/'):
-            p += '/'
-            changed = True
-    else:
-        if p.endswith('/'):
-            p = p.rstrip('/')
-            changed = True
-    if changed:
-        parts = list(environ['webskewer.split_uri'])
-        parts[2] = p
-        return MovedPermanently(urlunsplit(parts))
 
 
 def decodeurl(url):

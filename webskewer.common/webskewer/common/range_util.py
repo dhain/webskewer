@@ -1,7 +1,7 @@
 from collections import deque
 
-from webskewer.serve.grammar import range_spec
-from webskewer.serve.exceptions import BadRangeSpecError
+from webskewer.common.http_grammar import range_spec
+from webskewer.common.exceptions import BadRangeSpecError
 
 
 def parse_range(s):

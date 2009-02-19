@@ -28,7 +28,6 @@ setup(
     namespace_packages=['webskewer'],
     install_requires=[
         'greennet',
-        'pytz',
         'webskewer.common',
         'webskewer.wsgi',
     ],

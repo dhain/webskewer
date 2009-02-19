@@ -3,9 +3,10 @@ import datetime
 import mimetypes
 
 from webskewer.common import http_status
-from webskewer.serve import time_util, range_util
-from webskewer.serve.exceptions import RangePastEOFError, BadRangeSpecError
-from webskewer.serve.util import normurl, decodeurl
+from webskewer.common import time_util, range_util
+from webskewer.common.exceptions import RangePastEOFError, BadRangeSpecError
+from webskewer.common.util import decodeurl
+from webskewer.wsgi.slash import with_slash, without_slash
 from webskewer.wsgi.http import (NotFound, NotModified,
                                  RangeNotSatisfiable)
 
@@ -131,12 +132,9 @@ class static_files(object):
                 for f in self.index_files:
                     nfn = os.path.join(fn, f)
                     if os.path.isfile(nfn):
-                        return (normurl(environ, True) or
-                                self.send_file(nfn))(environ, start_response)
+                        return with_slash(self.send_file(nfn))(environ, start_response)
                 if self.listing:
-                    return (normurl(environ, True) or
-                            self.list_dir(fn))(environ, start_response)
+                    return with_slash(self.list_dir(fn))(environ, start_response)
             elif os.path.isfile(fn):
-                return (normurl(environ, False) or
-                        self.send_file(fn))(environ, start_response)
+                return without_slash(self.send_file(fn))(environ, start_response)
         return NotFound()(environ, start_response)

@@ -22,12 +22,8 @@ modules = (
     'webskewer.serve.main',
     'webskewer.serve.message',
     'webskewer.serve.multipart',
-    'webskewer.serve.range_util',
     'webskewer.serve.recv',
     'webskewer.serve.serve',
-    'webskewer.serve.static_files',
-    'webskewer.serve.time_util',
-    'webskewer.serve.util',
 )
 
 test_modules = (

@@ -1,16 +1,16 @@
 import urllib
 from urlparse import urlsplit
 
-from webskewer.serve import grammar
-from webskewer.serve.exceptions import BadVersionError, BadRequestError
+from webskewer.common import http_grammar
+from webskewer.common.exceptions import BadVersionError, BadRequestError
 
 
 def parse_request(req):
-    for r in (grammar.req1x, grammar.req09):
+    for r in (http_grammar.req1x, http_grammar.req09):
         m = r.match(req)
         if m is None:
             continue
-        if r is grammar.req1x:
+        if r is http_grammar.req1x:
             method, uri, ver_maj, ver_min = m.groups()
             version = (int(ver_maj), int(ver_min))
         else:

@@ -1,5 +1,5 @@
-from webskewer.serve import grammar
-from webskewer.serve.exceptions import BadHeaderError
+from webskewer.common import http_grammar
+from webskewer.common.exceptions import BadHeaderError
 
 
 """HTTP header helper functions."""
@@ -9,7 +9,7 @@ def parse_headers(s):
     start = 0
     slen = len(s)
     while start < slen:
-        m = grammar.header.match(s, start)
+        m = http_grammar.header.match(s, start)
         if m is None:
             raise BadHeaderError(start)
         yield m.groups()
@@ -34,25 +34,25 @@ _slash_match = lambda m: '\\' + m.group(0)
 def qs(s):
     """Turn s into an HTTP quoted-string."""
     s = s.replace('\\', '\\\\')
-    return '"' + grammar.nqtext.sub(_slash_match, s) + '"'
+    return '"' + http_grammar.nqtext.sub(_slash_match, s) + '"'
 
 def qscx(s):
     """Turn s into an HTTP quoted-string if it is not an HTTP token."""
-    return s if grammar.token.match(s) else qs(s)
+    return s if http_grammar.token.match(s) else qs(s)
 
 def qsc(s):
     """Turn s into an HTTP quoted-string if it is not a valid header value."""
-    return s if grammar.text.match(s) else qs(s)
+    return s if http_grammar.text.match(s) else qs(s)
 
 
 _unslash_match = lambda m: m.group(0)[1]
 def uqs(s):
     """Turn an HTTP quoted-string into an unquoted string."""
-    return grammar.qpair.sub(_unslash_match, s[1:-1])
+    return http_grammar.qpair.sub(_unslash_match, s[1:-1])
 
 def uqsc(s):
     """Turn a string into an unquoted string only if it's an HTTP quoted-string."""
-    m = grammar.qstring.match(s)
+    m = http_grammar.qstring.match(s)
     return uqs(s) if m and m.end() == len(s) else s
 
 

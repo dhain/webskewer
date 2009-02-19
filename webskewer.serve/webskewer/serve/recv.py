@@ -1,10 +1,11 @@
 import greennet
 
-from webskewer.serve import grammar, headers, message
-from webskewer.serve.util import IterFile, DummyFile
-from webskewer.serve.exceptions import (RequestTooLargeError, HeadersTooLargeError,
-                              ChunkTooLargeError, BadChunkSizeError,
-                              BadRequestError, UnimplementedError)
+from webskewer.serve import headers, message
+from webskewer.common import http_grammar
+from webskewer.common.util import IterFile, DummyFile
+from webskewer.common.exceptions import (
+    RequestTooLargeError, HeadersTooLargeError, ChunkTooLargeError,
+    BadChunkSizeError, BadRequestError, UnimplementedError)
 
 
 def recv_requests(sock, maxlen=8192):
@@ -54,7 +55,7 @@ def recv_chunked(sock):
             chunk_size = ''.join(
                 greennet.recv_until_maxlen(sock, '\r\n\r\n', 258,
                                            ChunkTooLargeError))
-        m = grammar.chunk_size.match(chunk_size)
+        m = http_grammar.chunk_size.match(chunk_size)
         if not m:
             raise BadChunkSizeError()
         chunk_size = int(chunk_size, 16)
