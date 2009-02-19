@@ -26,7 +26,6 @@ modules = (
     'webskewer.serve.recv',
     'webskewer.serve.serve',
     'webskewer.serve.static_files',
-    'webskewer.serve.status',
     'webskewer.serve.time_util',
     'webskewer.serve.util',
 )

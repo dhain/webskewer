@@ -4,7 +4,7 @@ from os.path import getmtime
 from urllib import unquote_plus
 from urlparse import urlunsplit
 
-from webskewer.serve import wsgi
+from webskewer.wsgi.http import MovedPermanently
 
 
 __all__ = ['fprop', 'normurl', 'decodeurl',
@@ -36,7 +36,7 @@ def normurl(environ, slash):
     if changed:
         parts = list(environ['webskewer.split_uri'])
         parts[2] = p
-        return wsgi.MovedPermanently(urlunsplit(parts))
+        return MovedPermanently(urlunsplit(parts))
 
 
 def decodeurl(url):

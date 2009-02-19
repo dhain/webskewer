@@ -9,11 +9,12 @@ import greennet
 from greennet import greenlet
 from greennet.trigger import Trigger
 
-from webskewer.serve import message, exceptions, wsgi
+from webskewer.serve import message, exceptions
 from webskewer.serve.log import log_req, log_exc, log_err
 from webskewer.serve.recv import recv_requests
 from webskewer.serve.time_util import now_1123
 from webskewer.serve.util import DummyFile
+from webskewer.wsgi.http import ServerError, BadRequest
 
 
 __version__ = (0,1)
@@ -46,7 +47,7 @@ class RequestHandler(object):
             print >> sys.stderr, log_exc(self.environ['REMOTE_ADDR'])
             if self.headers_sent:
                 return True # signal caller to close connection
-            self.application = wsgi.ServerError()
+            self.application = ServerError()
             return self.handle()
         finally:
             if hasattr(resp, 'close'):
@@ -150,7 +151,7 @@ def handle_connection(sock, application, ssl=False):
                 'webskewer.bad_request': True,
             }
             environ.update(server_env)
-            handler = RequestHandler(sock, wsgi.BadRequest(), environ)
+            handler = RequestHandler(sock, BadRequest(), environ)
             handler.handle()
             print >> sys.stderr, log_err(repr(err), remote_addr)
         except greennet.ConnectionLost:

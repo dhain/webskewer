@@ -2,9 +2,12 @@ import os
 import datetime
 import mimetypes
 
-from webskewer.serve import time_util, range_util, status, wsgi
+from webskewer.common import http_status
+from webskewer.serve import time_util, range_util
 from webskewer.serve.exceptions import RangePastEOFError, BadRangeSpecError
 from webskewer.serve.util import normurl, decodeurl
+from webskewer.wsgi.http import (NotFound, NotModified,
+                                 RangeNotSatisfiable)
 
 
 def read_range(file, (start, end), bufsize=8192):
@@ -47,7 +50,7 @@ class static_files(object):
             st = os.stat(fn)
             mt = time_util.timestamp_to_dt(st.st_mtime, time_util.localtime)
             if not time_util.check_if_modified_since(environ, mt):
-                return wsgi.NotModified()(environ, start_response)
+                return NotModified()(environ, start_response)
             
             clen = st.st_size
             ctype, cenc = mimetypes.guess_type(fn)
@@ -64,7 +67,7 @@ class static_files(object):
                     ranges = None
                 else:
                     if not ranges:
-                        return wsgi.RangeNotSatisfiable(clen)(environ, start_response)
+                        return RangeNotSatisfiable(clen)(environ, start_response)
             
             headers = [
                 ('Last-modified', time_util.dt_to_1123(mt)),
@@ -80,7 +83,7 @@ class static_files(object):
                 # TODO: wsgify this
                 def partial_start_response(status, headers, exc_info=None):
                     pass
-                resp = wsgi.PartialContent(
+                resp = PartialContent(
                     ((start, end, read_range(f, (start, end)))
                      for start, end in ranges))
                 content_headers = {}
@@ -98,7 +101,7 @@ class static_files(object):
                 if cenc:
                     headers.append(('Content-encoding', cenc))
                 headers.append(('Content-length', clen))
-                start_response(status.OK, headers)
+                start_response(http_status.OK, headers)
                 return read_range(f, (0, None))
         return send_file
     
@@ -114,7 +117,7 @@ class static_files(object):
             items = u''.join(u'<li><a href="%s">%s</a></li>' % (fn, fn)
                              for fn in files).encode('utf-8')
             body = self.dir_listing % locals()
-            start_response(status.OK,
+            start_response(http_status.OK,
                            [('Content-type', 'text/html; charset=utf-8'),
                             ('Content-length', str(len(body)))])
             return [body]
@@ -136,4 +139,4 @@ class static_files(object):
             elif os.path.isfile(fn):
                 return (normurl(environ, False) or
                         self.send_file(fn))(environ, start_response)
-        return wsgi.NotFound()(environ, start_response)
+        return NotFound()(environ, start_response)

@@ -1,6 +1,6 @@
 import sys
 
-from webskewer.serve import status
+from webskewer.common import http_status
 
 
 __all__ = ['BadRequest', 'ServerError', 'HelloWorld']
@@ -10,7 +10,8 @@ ee = ('<html><head><title>%(status)s</title></head>'
       '<body><h1>%(status)s</h1><p>%(msg)s</p></body></html>\r\n')
 
 
-def Simple(message, status=status.OK, headers=(), ctype='text/html', exc_info=()):
+def Simple(message, status=http_status.OK,
+           headers=(), ctype='text/html', exc_info=()):
     def app(environ, start_response):
         msg = message
         body = ee % locals()
@@ -23,40 +24,40 @@ def Simple(message, status=status.OK, headers=(), ctype='text/html', exc_info=()
 
 
 def BadRequest():
-    return Simple('Bad request.', status.BAD_REQUEST)
+    return Simple('Bad request.', http_status.BAD_REQUEST)
 
 
 def ServerError():
     return Simple('An internal server error has occurred. '
                   'Please try again later.',
-                  status.SERVER_ERROR, exc_info=sys.exc_info())
+                  http_status.SERVER_ERROR, exc_info=sys.exc_info())
 
 
 def NotFound():
-    return Simple('Not found.', status.NOT_FOUND)
+    return Simple('Not found.', http_status.NOT_FOUND)
 
 
 def NotModified():
-    return Simple('Not modified.', status.NOT_MODIFIED)
+    return Simple('Not modified.', http_status.NOT_MODIFIED)
 
 
 def MovedPermanently(location):
     return Simple('The requested resource has moved to '
                   '<a href="%(location)s">%(location)s</a>.' % locals(),
-                  status.MOVED_PERMANENTLY,
+                  http_status.MOVED_PERMANENTLY,
                   [('Location', location)])
 
 
 def SeeOther(location):
     return Simple('The requested resource was found at '
                   '<a href="%(location)s">%(location)s</a>.' % locals(),
-                  status.SEE_OTHER,
+                  http_status.SEE_OTHER,
                   [('Location', location)])
 
 
 def RangeNotSatisfiable(size):
    return Simple('Requested range not satisfiable.',
-                 status.RANGE_NOT_SATISFIABLE,
+                 http_status.RANGE_NOT_SATISFIABLE,
                  [('Content-range', '*/%d' % (size,))])
 
 
@@ -72,12 +73,12 @@ def Options(methods):
 
 def MethodNotAllowed(methods):
     return Simple('Method not allowed.',
-                  status.METHOD_NOT_ALLOWED,
+                  http_status.METHOD_NOT_ALLOWED,
                   [('Allow', ', '.join(methods))])
 
 
 def PartialContent(req, ranges, clen=None):
-    st = status.PARTIAL_CONTENT
+    st = http_status.PARTIAL_CONTENT
     ent = {}
     if clen is None:
         clen = '*'

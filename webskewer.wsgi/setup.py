@@ -23,4 +23,7 @@ setup(
     ],
     packages=find_packages(exclude='tests'),
     namespace_packages=['webskewer'],
+    install_requires=[
+        'webskewer.common',
+    ],
 )
