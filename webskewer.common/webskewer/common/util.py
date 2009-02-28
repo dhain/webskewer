@@ -18,25 +18,57 @@ def decodeurl(url):
 
 
 class DummyFile(object):
-    __slots__ = ()
+    """A file-like object that is always empty."""
+    
+    __slots__ = ('_closed',)
+    
+    def __init__(self):
+        self._closed = False
     
     def __iter__(self):
         return self
     
     def next(self):
+        if self._closed:
+            raise IOError('read from closed file')
         raise StopIteration()
     
     def read(self, size=None):
+        if self._closed:
+            raise IOError('read from closed file')
         return ''
     
     def readline(self):
+        if self._closed:
+            raise IOError('read from closed file')
         return ''
     
     def readlines(self, hint=None):
+        if self._closed:
+            raise IOError('read from closed file')
         return []
+    
+    def close(self):
+        self._closed = True
 
 
 class IterFile(object):
+    """A file like-object wrapping an iterator that yields strings.
+    
+    Take an iterable, for example:
+    
+    >>> def hello_iter():
+    ...     yield 'hello '
+    ...     yield 'world!'
+    ... 
+    
+    Wrap it in IterFile, and turn it into a file-like object:
+    
+    >>> file_like = IterFile(hello_iter())
+    >>> file_like.read()
+    'hello world!'
+    """
+    
     __slots__ = ('_iter', '_buf')
     
     def __init__(self, it):
@@ -47,16 +79,24 @@ class IterFile(object):
         return iter(self.readline, '')
     
     def read(self, size=None):
+        if self._iter is None:
+            raise IOError('read from closed file')
         while size is None or len(self._buf) < size:
             try:
                 self._buf += self._iter.next()
             except StopIteration:
                 break
-        data = self._buf[:size]
-        self._buf = self._buf[size:]
+        if size is None:
+            data = self._buf
+            self._buf = ''
+        else:
+            data = self._buf[:size]
+            self._buf = self._buf[size:]
         return data
     
     def readline(self):
+        if self._iter is None:
+            raise IOError('read from closed file')
         i = -1
         start = 0
         while i < 0:
@@ -76,7 +116,13 @@ class IterFile(object):
         return data
     
     def readlines(self, hint=None):
+        if self._iter is None:
+            raise IOError('read from closed file')
         return list(self)
+    
+    def close(self):
+        self._iter = None
+        self._buf = None
 
 
 def reloading(f):
