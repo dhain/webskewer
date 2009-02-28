@@ -71,7 +71,7 @@ class RequestHandler(object):
                     missing.remove(lower)
                 headers.append('%s: %s\r\n' % header)
             add_headers = []
-            if 'content-length' in missing:
+            if 'content-length' in missing and not self.status.startswith('304'):
                 if self.environ['webskewer.http_version'] > (1,0):
                     add_headers.append('Transfer-Encoding: chunked\r\n')
                     self.chunked = True

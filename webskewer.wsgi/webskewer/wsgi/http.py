@@ -34,7 +34,10 @@ def NotFound():
 
 
 def NotModified():
-    return Simple('Not modified.', http_status.NOT_MODIFIED)
+    def app(environ, start_response):
+        start_response(http_status.NOT_MODIFIED, [])
+        return []
+    return app
 
 
 def MovedPermanently(location):
