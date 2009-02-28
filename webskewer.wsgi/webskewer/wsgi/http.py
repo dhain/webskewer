@@ -1,15 +1,16 @@
+import sys
+
 from webskewer.common import http_status
 
 
 ee = ('<html><head><title>%(status)s</title></head>'
-      '<body><h1>%(status)s</h1><p>%(msg)s</p></body></html>\r\n')
+      '<body><h1>%(status)s</h1><p>%(message)s</p></body></html>\r\n')
 
 
 def Simple(message, status=http_status.OK,
            headers=(), ctype='text/html', exc_info=()):
     def app(environ, start_response):
-        msg = message
-        body = ee % locals()
+        body = ee % dict(status=status, message=message)
         start_response(status,
                        [('Content-type', ctype),
                         ('Content-length', str(len(body)))] + list(headers),
